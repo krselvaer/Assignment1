@@ -40,6 +40,5 @@ of these attributes.
 
 However, the helping methods Gain and Entropy have to know these values. So the method of creating the tree have to pass it along.
 
-
 In the algorithms that I have seen, the names of the Attributes is never written. And the values isn't written either.
 This means that I have to either create my program to interpet the name 

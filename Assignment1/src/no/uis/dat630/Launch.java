@@ -19,7 +19,7 @@ public class Launch {
 		//Controller.newDecisionTree(persons, targetAttribute, attributes);
 		
 		String out = "c:somethingFckyou";
-		Controller.comparableData(out, Controller.newDecisionTree(data, targetAttribute, attributes));
+		//Controller.comparableData(out, out);
 
 	}
 
