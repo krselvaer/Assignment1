@@ -1,5 +1,11 @@
 package no.uis.dat630;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -34,7 +40,7 @@ public class Controller {
 			root.setLabel("-");
 			return root;
 		} else if (attributes.isEmpty()) {
-			root.setLabel("most common value of the target attribute in the examples");
+			root.setLabel("Most common value of the target attribute in the examples");
 			return root;
 		} else {
 
@@ -53,8 +59,9 @@ public class Controller {
 			Vector<String> subSet = new Vector<String>();
 			
 			for (String value : values) {
-				DTreeNode attValueNode = new DTreeNode();
-				attValueNode.setParent(root);
+				DTreeNode newNode = new DTreeNode();
+				newNode.setParent(root);
+				root.addChild(newNode);
 				for (String dataRow : data) {
 					if(dataRow.contains(value)) {
 						subSet.add(dataRow);
@@ -63,11 +70,14 @@ public class Controller {
 				
 				if(subSet.isEmpty()) {
 					DTreeNode leafNode = new DTreeNode();
-					leafNode.setParent(attValueNode);
+					leafNode.setParent(newNode);
+					root.addChild(leafNode);
+					leafNode.setLabel("Most common target value in the examples");
 				} else {
 					attributes.remove(startingAttribute);
 					DTreeNode subTree = ID3(subSet, targetAttribute, attributes);
 					subTree.setParent(root);
+					root.addChild(subTree);
 				}
 			}
 		}
@@ -83,7 +93,25 @@ public class Controller {
 	 */
 	public static Vector<String> test (Vector<String> data, Attribute targetAttribute, DTreeNode root, List<Attribute> attributes) {
 		Vector<String> results = new Vector<String>();
-	
+		DTreeNode temp = root;
+		int i = 1;
+		for (String dataRow : data) {
+			while (temp != null) {
+				if (temp.getLabel().equals("+")) {
+					results.add(i+",>50K");
+				} else if (temp.getLabel().equals("-")) {
+					results.add(i+",<=50K");
+				} else {	
+					for(int k=0; k < temp.getEdgeValues().size(); k++) {
+						if(dataRow.contains(temp.getEdgeValues().elementAt(k))) {
+							temp = temp.getChildren().elementAt(k);
+						}
+					}
+				}				
+			}
+			
+			i++;
+		}
 		return results;
 	}
 	
@@ -139,7 +167,6 @@ public class Controller {
 		
 		double entropy = (over50K/data.size()) * (Math.log(over50K/data.size()) / Math.log(2)) 
 					   - (under50K/data.size()) * (Math.log(over50K/data.size()) / Math.log(2));
-		
 		return entropy;
 	}
 	
@@ -150,9 +177,23 @@ public class Controller {
 	public static Vector<String> createData (String filename) {
 		
 		Vector<String> data = new Vector<String>();
-		//while dataleft in data
-			data.add("hei");
-			//iterate new line;
+		try {
+			FileInputStream fstream_school = new FileInputStream(filename); 
+			DataInputStream data_input = new DataInputStream(fstream_school); 
+			BufferedReader buffer = new BufferedReader(new InputStreamReader(data_input)); 
+			String str_line;
+        
+			while ((str_line = buffer.readLine()) != null) 
+			{ 
+				str_line = str_line.trim(); 
+				if ((str_line.length()!=0))  
+				{ 
+					data.add(str_line);
+				} 
+			}
+		} catch (Exception e) {
+			System.out.println("ErrorFilename or something");
+		}
 		
 		return data;
 	}
@@ -181,15 +222,33 @@ public class Controller {
 	public static Vector<String> assignValues(Vector<String> data, Attribute a) {
 
 		Vector<String> values = new Vector<String>();
-		int AttributeID = a.getID();
+		int attributeID = a.getID();
 		String tempValue = null;
 		double continuousValue = 0;
 		int numberOfContinuousValues = 0;
 		int beginIndex = 0;
 		int endIndex = 0;
+		int numberOfCommas = 0;
+		boolean beginIndexSet = false;
 		
 		for (String dataRow : data) {
-			// set beginIndex and endIndex by: tempValue == dataRow after AttributeID number of ',' + ' ' and before next ','
+			
+			for (int i=0; i<dataRow.length(); i++) {
+				if (numberOfCommas == attributeID) {
+					beginIndex = i;
+					beginIndexSet = true;
+				} 
+				if (dataRow.charAt(i) == ' ') {
+					numberOfCommas++;
+				} 
+				if (beginIndexSet && dataRow.charAt(i) == ',') 			 {
+					endIndex = i;
+					break;
+				}
+			}
+			
+			tempValue = dataRow.substring(beginIndex, endIndex);
+			
 			if (tryParseInt(tempValue)) {
 				continuousValue = Integer.parseInt(tempValue);
 				numberOfContinuousValues ++;
@@ -206,7 +265,6 @@ public class Controller {
 			double absValue = 0;
 			
 			for(String dataRow : data) {
-				// set beginIndex and endIndex by: tempValue == dataRow after AttributeID number of ',' + ' ' and before next ','
 				if(Integer.parseInt(dataRow.substring(beginIndex, endIndex)) == continuousValue) {
 					values.add("<= " + continuousValue);
 					values.add("> " + continuousValue);
@@ -231,7 +289,16 @@ public class Controller {
 	 * TODO This method should convert the results from the test method and save them in a proper textfile where outPath decides
 	 */
 	public static void comparableData (Vector<String> results, String outPath) {
-		// This method will prepare data for the eval script.
+		try {
+			FileWriter writer = new FileWriter(outPath);
+			writer.write("Id,Target");
+			for(String result : results) {
+				writer.write(result);
+			}
+			writer.close();
+		} catch (Exception e) {
+			System.out.println("The usual crap");
+		}
 	}
 	
 	/*

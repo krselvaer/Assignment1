@@ -9,17 +9,26 @@ public class Launch {
 	public static void main(String[] args) {
 		
 		
-		String filename = "hei";
-		Vector<String> data = Controller.createData(filename);
-		Vector<Attribute> attributes = new Vector<Attribute>();
-		Controller.assignAttributes(data.elementAt(0), attributes);
+		String innTrain = "adultTrain.txt";
+		String innTest = "adultTest.txt";
+		String out = "results.text";
 		
-		Attribute targetAttribute = attributes.lastElement();
+		Vector<String> dataTrain;
+		Vector<String> dataTest;
+		Vector<Attribute> attributes;
+		DTreeNode tree;
+		Vector<String> testResults;
+		Attribute targetAttribute;
+		
+		dataTrain = Controller.createData(innTrain);
+		dataTest = Controller.createData(innTest);
+		attributes = new Vector<Attribute>();
+		Controller.assignAttributes(dataTrain.elementAt(0), attributes);
+		targetAttribute = attributes.lastElement();
+		tree = Controller.ID3(dataTrain, targetAttribute, attributes);
+		testResults = Controller.test(dataTest, targetAttribute, tree, attributes);
+		Controller.comparableData(testResults, out);
 			
-		//Controller.newDecisionTree(persons, targetAttribute, attributes);
-		
-		String out = "c:somethingFckyou";
-		//Controller.comparableData(out, out);
 
 	}
 

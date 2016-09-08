@@ -8,19 +8,22 @@ public class DTreeNode {
 	private Vector<DTreeNode> children;
 	private Attribute attribute;
 	private String label;
-
+	private Vector<String> edgeValues;
+	
 	public DTreeNode(Attribute attribute) {
 		this.attribute = attribute;
 		parent = null;
 		label = null;
-		children = null;
+		children = new Vector<DTreeNode>();
+		edgeValues = new Vector<String>();
 	}
-	
+
 	public DTreeNode() {
 		attribute = null;
 		parent = null;
 		label = null;
-		children = null;
+		children = new Vector<DTreeNode>();
+		edgeValues = new Vector<String>();
 	}
 
 	public DTreeNode(Attribute attribute, DTreeNode parent) {
@@ -65,4 +68,15 @@ public class DTreeNode {
 		children.addElement(child);
 	}
 
+	public Vector<String> getEdgeValues() {
+		return edgeValues;
+	}
+
+	public void setEdgeValues(Vector<String> edgeValues) {
+		this.edgeValues = edgeValues;
+	}
+	
+	public void addEdgeValues(String value) {
+		edgeValues.addElement(value);
+	}
 }
