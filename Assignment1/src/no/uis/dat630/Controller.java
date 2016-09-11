@@ -1,326 +1,646 @@
 package no.uis.dat630;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
+import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Vector;
 
-
-
 public class Controller {
-	
-	
-	/*
-	 * TODO Most likely delete this	
-	 */
-	public static DTreeNode newDecisionTree (Vector<String> data, Attribute targetAttribute, List<Attribute> attributes) {
-		// Create root
-		DTreeNode root = new DTreeNode ();
-		// Test
-		return root;
-	}
-	
-	/*
-	 * TODO Finish this method. Should be almost ready, fix the obvious errors
-	 * Understand the else if clause that is unclear
-	 */
-	public static DTreeNode ID3 (Vector<String> data, Attribute targetAttribute, List<Attribute> attributes) {
-			
-		DTreeNode root = new DTreeNode ();
-		
-		if (allPeopleOver50K(data)) {
-			root.setLabel("+");
-			return root;
-		} else if (!allPeopleOver50K(data)) {
-			root.setLabel("-");
-			return root;
-		} else if (attributes.isEmpty()) {
-			root.setLabel("Most common value of the target attribute in the examples");
-			return root;
-		} else {
 
-			double iGain = 0;
-			Attribute startingAttribute = null;
-			
-			for (Attribute a : attributes) {
-				if (gain(a,data) > iGain) {
-					iGain = gain(a,data);
-					startingAttribute = a;
-				}
-			}
-			
-			root.setAttribute(startingAttribute);
-			Vector<String> values = assignValues(data, startingAttribute);
-			Vector<String> subSet = new Vector<String>();
-			
-			for (String value : values) {
-				DTreeNode newNode = new DTreeNode();
-				newNode.setParent(root);
-				root.addChild(newNode);
-				for (String dataRow : data) {
-					if(dataRow.contains(value)) {
-						subSet.add(dataRow);
-					}
-				}
-				
-				if(subSet.isEmpty()) {
-					DTreeNode leafNode = new DTreeNode();
-					leafNode.setParent(newNode);
-					root.addChild(leafNode);
-					leafNode.setLabel("Most common target value in the examples");
-				} else {
-					attributes.remove(startingAttribute);
-					DTreeNode subTree = ID3(subSet, targetAttribute, attributes);
-					subTree.setParent(root);
-					root.addChild(subTree);
-				}
-			}
-		}
-		
-		
-		return root;
-	}
-	
 	/*
-	 * TODO Create this method, this should take in the test data and produce what will be the results
-	 * Go through the tree starting with root, for each person. Then follow the path that his data takes him ending
-	 * with either a pluss or a minus. See information on what that means
+	 * TODO Create this method, this should take in the test data and produce
+	 * what will be the results Go through the tree starting with root, for each
+	 * person. Then follow the path that his data takes him ending with either a
+	 * pluss or a minus. See information on what that means
 	 */
-	public static Vector<String> test (Vector<String> data, Attribute targetAttribute, DTreeNode root, List<Attribute> attributes) {
-		Vector<String> results = new Vector<String>();
-		DTreeNode temp = root;
-		int i = 1;
-		for (String dataRow : data) {
+	public static Vector<Person> test(Vector<Person> people, DTreeNode root, List<Attribute> attributes) {
+
+		for (Person person : people) {
+			DTreeNode temp = root;
+
 			while (temp != null) {
-				if (temp.getLabel().equals("+")) {
-					results.add(i+",>50K");
-				} else if (temp.getLabel().equals("-")) {
-					results.add(i+",<=50K");
-				} else {	
-					for(int k=0; k < temp.getEdgeValues().size(); k++) {
-						if(dataRow.contains(temp.getEdgeValues().elementAt(k))) {
-							temp = temp.getChildren().elementAt(k);
+				if (temp.getLabel() != null && temp.getLabel().equals("+")) {
+					person.setOver50K(true);
+					break;
+				} else if (temp.getLabel() != null && temp.getLabel().equals("-")) {
+					person.setOver50K(false);
+					break;
+				} else {
+
+					String[] tempValues = null;
+
+					switch (temp.getAttribute().getID()) {
+
+					case 0:
+
+						for (int k = 0; k < temp.getEdgeValues().size(); k++) {
+
+							if (temp.getEdgeValues().get(k).matches(("^[0-9\\-]+$"))) {
+								tempValues = temp.getEdgeValues().get(k).split("-");
+							}
+
+							if (person.getAge() >= Integer.parseInt(tempValues[0])
+									&& person.getAge() < Integer.parseInt(tempValues[1])) {
+								temp = temp.getChildren().get(k);
+								break;
+							}
 						}
+
+						break;
+					case 1:
+						for (int k = 0; k < temp.getEdgeValues().size(); k++) {
+							if (person.getWorkclass().equals(temp.getEdgeValues().get(k))) {
+								temp = temp.getChildren().get(k);
+								break;
+							}
+						}
+
+						if (person.getWorkclass().equals("?") || person.getWorkclass().contains("Never")) {
+							temp = temp.getChildren().get(0);
+						}
+
+						break;
+					case 2:
+						for (int k = 0; k < temp.getEdgeValues().size(); k++) {
+
+							if (temp.getEdgeValues().get(k).matches(".*\\d+.*")) {
+								tempValues = temp.getEdgeValues().get(k).split("-");
+							}
+
+							if (person.getFnlwgt() >= Integer.parseInt(tempValues[0])
+									&& person.getFnlwgt() < Integer.parseInt(tempValues[1])) {
+								temp = temp.getChildren().get(k);
+								break;
+							}
+						}
+						break;
+					case 3:
+						for (int k = 0; k < temp.getEdgeValues().size(); k++) {
+							if (person.getEducation().equals(temp.getEdgeValues().get(k))) {
+								temp = temp.getChildren().get(k);
+								break;
+							}
+						}
+
+						if (person.getEducation().equals("?")) {
+							temp = temp.getChildren().get(1);
+						}
+
+						break;
+					case 4:
+						for (int k = 0; k < temp.getEdgeValues().size(); k++) {
+
+							if (temp.getEdgeValues().get(k).matches(".*\\d+.*")) {
+								tempValues = temp.getEdgeValues().get(k).split("-");
+							}
+
+							if (person.getEducationNum() >= Integer.parseInt(tempValues[0])
+									&& person.getEducationNum() < Integer.parseInt(tempValues[1])) {
+								temp = temp.getChildren().get(k);
+								break;
+							}
+						}
+						break;
+					case 5:
+						for (int k = 0; k < temp.getEdgeValues().size(); k++) {
+
+							if (person.getMaritalStatus().equals(temp.getEdgeValues().get(k))) {
+								temp = temp.getChildren().get(k);
+								break;
+							}
+						}
+
+						if (person.getMaritalStatus().equals("?")) {
+							temp = temp.getChildren().get(1);
+						}
+
+						break;
+					case 6:
+						for (int k = 0; k < temp.getEdgeValues().size(); k++) {
+
+							if (person.getOccupation().equals(temp.getEdgeValues().get(k))) {
+								temp = temp.getChildren().get(k);
+								break;
+							}
+						}
+
+						if (person.getOccupation().equals("?")) {
+							temp = temp.getChildren().lastElement();
+						}
+
+						break;
+					case 7:
+						for (int k = 0; k < temp.getEdgeValues().size(); k++) {
+							if (person.getRelationship().equals(temp.getEdgeValues().get(k))) {
+								temp = temp.getChildren().get(k);
+								break;
+							}
+						}
+
+						if (person.getRelationship().equals("?")) {
+							temp = temp.getChildren().get(0);
+						}
+
+						break;
+					case 8:
+						for (int k = 0; k < temp.getEdgeValues().size(); k++) {
+							if (person.getRace().equals(temp.getEdgeValues().get(k))) {
+								temp = temp.getChildren().get(k);
+								break;
+							}
+						}
+
+						if (person.getRace().equals("?")) {
+							temp = temp.getChildren().get(1);
+						}
+
+						break;
+					case 9:
+						for (int k = 0; k < temp.getEdgeValues().size(); k++) {
+							if (person.getSex().equals(temp.getEdgeValues().get(k))) {
+								temp = temp.getChildren().get(k);
+								break;
+							}
+						}
+
+						if (person.getSex().equals("?")) {
+							temp = temp.getChildren().get(1);
+						}
+
+						break;
+					case 10:
+						for (int k = 0; k < temp.getEdgeValues().size(); k++) {
+
+							if (temp.getEdgeValues().get(k).matches(".*\\d+.*")) {
+								tempValues = temp.getEdgeValues().get(k).split("-");
+							}
+
+							if (person.getCapitalGain() >= Integer.parseInt(tempValues[0])
+									&& person.getCapitalGain() < Integer.parseInt(tempValues[1])) {
+								temp = temp.getChildren().get(k);
+								break;
+							}
+						}
+
+						break;
+					case 11:
+						for (int k = 0; k < temp.getEdgeValues().size(); k++) {
+
+							if (temp.getEdgeValues().get(k).matches(".*\\d+.*")) {
+								tempValues = temp.getEdgeValues().get(k).split("-");
+							}
+
+							if (person.getCapitalLoss() >= Integer.parseInt(tempValues[0])
+									&& person.getCapitalLoss() < Integer.parseInt(tempValues[1])) {
+								temp = temp.getChildren().get(k);
+								break;
+							}
+						}
+						break;
+					case 12:
+						for (int k = 0; k < temp.getEdgeValues().size(); k++) {
+
+							if (temp.getEdgeValues().get(k).matches(".*\\d+.*")) {
+								tempValues = temp.getEdgeValues().get(k).split("-");
+							}
+
+							if (person.getHoursPerWeek() >= Integer.parseInt(tempValues[0])
+									&& person.getHoursPerWeek() < Integer.parseInt(tempValues[1])) {
+								temp = temp.getChildren().get(k);
+								break;
+							}
+						}
+						break;
+					case 13:
+						for (int k = 0; k < temp.getEdgeValues().size(); k++) {
+							if (person.getNativeCountry().equals(temp.getEdgeValues().get(k))) {
+								temp = temp.getChildren().get(k);
+								break;
+							}
+						}
+
+						if (person.getNativeCountry().equals("?")) {
+							temp = temp.getChildren().get(2);
+						}
+						break;
+					default:
+						System.out.print("couldn't complete tree");
+						temp = null;
+						break;
 					}
-				}				
-			}
-			
-			i++;
-		}
-		return results;
-	}
-	
-	/*
-	 * This method should be ready. Calculates gain for a given attribute according to the data
-	 * returns a double value between 0-1
-	 */
-	public static double gain (Attribute attribute, Vector<String> data){
-		
-		double temp = entropy(data);
-		double tempB = 0;
-		
-		Vector <String> values = assignValues(data, attribute);
-		Vector <String> subData = new Vector<String>();
-	
-		// So here we need to divide the problem, and do some recursive shit
-		// We need to divide it so that we take one step into an attribute and look at how many people with each of the values are over
-		// and how many are under.
-		
-		for (String value : values) {
-			for (String dataRow : data) {
-				if (dataRow.contains(value)) {
-					subData.add(dataRow);
 				}
 			}
-			
-			tempB += (subData.size()/data.size())*entropy(subData);
 		}
-		
-		double gain = temp - tempB;
-				
-		// So check attribute and look at how many values it has "Vector<String> assignValues(Attribute a)"
-		// then check every string in data, and divide it in subsets where you only include the people that has that value. Then check those people using entropy method
-
-		return gain;
+		return people;
 	}
 
 	/*
-	 * Calculates entropy for a given data, this is hard-coded for this example, meaning it calculates for
-	 * over/under 50K. Can't be used for anything else.
+	 * TODO This method should create the data from the learning set, and the
+	 * test set to be used in this program further
 	 */
-	public static double entropy (Vector<String> data){
-		int under50K = 0;
-		int over50K = 0;
-		CharSequence temp = "<=50K";
-		for (String dataRow : data) {
-			if (dataRow.contains(temp)) {
-				over50K += 1;
-				break;
-			} 			
-			under50K += 1;
-		}
-		
-		double entropy = (over50K/data.size()) * (Math.log(over50K/data.size()) / Math.log(2)) 
-					   - (under50K/data.size()) * (Math.log(over50K/data.size()) / Math.log(2));
-		return entropy;
-	}
-	
-	/*
-	 * TODO This method should create the data from the learning set, and the test set
-	 * to be used in this program further
-	 */
-	public static Vector<String> createData (String filename) {
-		
+	public static Vector<String> createData(String filename) {
+
 		Vector<String> data = new Vector<String>();
+
 		try {
-			FileInputStream fstream_school = new FileInputStream(filename); 
-			DataInputStream data_input = new DataInputStream(fstream_school); 
-			BufferedReader buffer = new BufferedReader(new InputStreamReader(data_input)); 
-			String str_line;
-        
-			while ((str_line = buffer.readLine()) != null) 
-			{ 
-				str_line = str_line.trim(); 
-				if ((str_line.length()!=0))  
-				{ 
-					data.add(str_line);
-				} 
+			Scanner sc = new Scanner(new File(filename));
+
+			while (sc.hasNextLine()) {
+				data.add(sc.nextLine());
 			}
+			sc.close();
+
 		} catch (Exception e) {
 			System.out.println("ErrorFilename or something");
 		}
-		
+
 		return data;
 	}
-	
+
+	public static Vector<Person> createPeople(Vector<String> data) {
+
+		Vector<Person> people = new Vector<Person>();
+
+		int age = 0;
+		String workclass = null;
+		int fnlwgt = 0;
+		String education;
+		int educationNum = 0;
+		String maritalStatus = null;
+		String occupation = null;
+		String relationship = null;
+		String race = null;
+		String sex = null;
+		int capitalGain = 0;
+		int capitalLoss = 0;
+		int hoursPerWeek = 0;
+		String nativeCountry = null;
+		boolean over50K = true;
+
+		for (String dataRow : data) {
+
+			if (!dataRow.contains("?")) {
+
+				if (dataRow.contains(">50K")) {
+					over50K = true;
+				} else {
+					over50K = false;
+				}
+
+				String[] temp = dataRow.split("\\s*,\\s*");
+
+				if (tryParseInt(temp[0])) {
+					age = Integer.parseInt(temp[0]);
+				}
+				workclass = temp[1];
+				if (tryParseInt(temp[2])) {
+					fnlwgt = Integer.parseInt(temp[2]);
+				}
+				education = temp[3];
+				if (tryParseInt(temp[4])) {
+					educationNum = Integer.parseInt(temp[4]);
+				}
+
+				maritalStatus = temp[5];
+				occupation = temp[6];
+				relationship = temp[7];
+				race = temp[8];
+				sex = temp[9];
+
+				if (tryParseInt(temp[10])) {
+					capitalGain = Integer.parseInt(temp[10]);
+				}
+				if (tryParseInt(temp[11])) {
+					capitalLoss = Integer.parseInt(temp[11]);
+				}
+
+				if (tryParseInt(temp[12])) {
+					hoursPerWeek = Integer.parseInt(temp[12]);
+				}
+
+				nativeCountry = temp[13];
+
+				Person person = new Person(age, workclass, fnlwgt, education, educationNum, maritalStatus, occupation,
+						relationship, race, sex, capitalGain, capitalLoss, hoursPerWeek, nativeCountry, over50K);
+
+				people.add(person);
+			}
+		}
+		return people;
+	}
+
+	public static Vector<Person> createTestPeople(Vector<String> data) {
+
+		Vector<Person> people = new Vector<Person>();
+
+		int age = 0;
+		String workclass = null;
+		int fnlwgt = 0;
+		String education;
+		int educationNum = 0;
+		String maritalStatus = null;
+		String occupation = null;
+		String relationship = null;
+		String race = null;
+		String sex = null;
+		int capitalGain = 0;
+		int capitalLoss = 0;
+		int hoursPerWeek = 0;
+		String nativeCountry = null;
+		boolean over50K = true;
+
+		for (String dataRow : data) {
+
+			if (dataRow.contains(">50K")) {
+				over50K = true;
+			} else 
+				over50K = false;
+
+			String[] temp = dataRow.split("\\s*,\\s*");
+
+			if (tryParseInt(temp[0])) {
+				age = Integer.parseInt(temp[0]);
+			}
+			workclass = temp[1];
+			if (tryParseInt(temp[2])) {
+				fnlwgt = Integer.parseInt(temp[2]);
+			}
+			education = temp[3];
+			if (tryParseInt(temp[4])) {
+				educationNum = Integer.parseInt(temp[4]);
+			}
+
+			maritalStatus = temp[5];
+			occupation = temp[6];
+			relationship = temp[7];
+			race = temp[8];
+			sex = temp[9];
+
+			if (tryParseInt(temp[10])) {
+				capitalGain = Integer.parseInt(temp[10]);
+			}
+			if (tryParseInt(temp[11])) {
+				capitalLoss = Integer.parseInt(temp[11]);
+			}
+
+			if (tryParseInt(temp[12])) {
+				hoursPerWeek = Integer.parseInt(temp[12]);
+			}
+
+			nativeCountry = temp[13];
+
+			Person person = new Person(age, workclass, fnlwgt, education, educationNum, maritalStatus, occupation,
+					relationship, race, sex, capitalGain, capitalLoss, hoursPerWeek, nativeCountry, over50K);
+
+			people.add(person);
+		}
+		return people;
+	}
+
 	/*
 	 * Assigns attributes and in a way counts them, this should work
 	 */
 	public static void assignAttributes(String dataString, Vector<Attribute> attributes) {
-		// Count the number of attributes there is. 
-		// So go through the data and find all attributes. In this case I go through the first line and count ',' because this way
-		// I get the number of attributes. -1, have to see if i need to get this one as well.
 		int IDcount = 0;
-		for(Character character : dataString.toCharArray()) {
-			if(character.equals(',')) {
+		for (Character character : dataString.toCharArray()) {
+			if (character.equals(',')) {
 				attributes.add(new Attribute(IDcount));
 				IDcount++;
-			}		
+			}
 		}
-	}
-	
-	/*
-	 * This assignValues does a bit of "Costly optimalization" It's more expensive to run then a typical assignValues in this context would be
-	 * because it calculates a binary version of continuous values. I think that in the long terms the program should run more effienciently because of it
-	 * But that remains to be seen.
-	 */
-	public static Vector<String> assignValues(Vector<String> data, Attribute a) {
+		attributes.get(0).setLabel("Age");
+		attributes.get(0).setNumCat(true);
+		attributes.get(1).setLabel("Workclass");
+		attributes.get(2).setLabel("Fnlwgt");
+		attributes.get(2).setNumCat(true);
+		attributes.get(3).setLabel("Education");
+		attributes.get(4).setLabel("EducationNum");
+		attributes.get(4).setNumCat(true);
+		attributes.get(5).setLabel("MaritalStatus");
+		attributes.get(6).setLabel("Occupation");
+		attributes.get(7).setLabel("Relationship");
+		attributes.get(8).setLabel("Race");
+		attributes.get(9).setLabel("Sex");
+		attributes.get(10).setLabel("CapitalGain");
+		attributes.get(10).setNumCat(true);
+		attributes.get(11).setLabel("CapitalLoss");
+		attributes.get(11).setNumCat(true);
+		attributes.get(12).setLabel("HoursPerWeek");
+		attributes.get(12).setNumCat(true);
+		attributes.get(13).setLabel("NativeCountry");
 
-		Vector<String> values = new Vector<String>();
+	}
+
+	public static Vector<String> assignValuesAtt(Vector<Person> people, Attribute a) {
+
+		@SuppressWarnings("unused")
 		int attributeID = a.getID();
-		String tempValue = null;
-		double continuousValue = 0;
-		int numberOfContinuousValues = 0;
-		int beginIndex = 0;
-		int endIndex = 0;
-		int numberOfCommas = 0;
-		boolean beginIndexSet = false;
-		
-		for (String dataRow : data) {
+		Vector<String> values = new Vector<String>();
+		Vector<Integer> tempValues = new Vector<Integer>();
+
+		switch (a.getID()) {
+
+		case 0:
+			for (Person person : people)
+				tempValues.add(person.getAge());
 			
-			for (int i=0; i<dataRow.length(); i++) {
-				if (numberOfCommas == attributeID) {
-					beginIndex = i;
-					beginIndexSet = true;
-				} 
-				if (dataRow.charAt(i) == ' ') {
-					numberOfCommas++;
-				} 
-				if (beginIndexSet && dataRow.charAt(i) == ',') 			 {
-					endIndex = i;
-					break;
-				}
-			}
+			Collections.sort(tempValues);
 			
-			tempValue = dataRow.substring(beginIndex, endIndex);
-			
-			if (tryParseInt(tempValue)) {
-				continuousValue = Integer.parseInt(tempValue);
-				numberOfContinuousValues ++;
-			}
-			if (!values.contains(tempValue)) {
-				values.add(tempValue);
-			}
+			values.add((tempValues.firstElement() - 1) + "-" + tempValues.get((tempValues.size() / 2)));
+			values.add(tempValues.get((tempValues.size() / 2)) + "-" + (tempValues.lastElement() + 1));
+			break;
+
+		case 1:
+//			values.add("Never-worked");
+			for (Person person : people)
+				if (!values.contains(person.getWorkclass()) && !person.getWorkclass().equals("?"))
+					values.add(person.getWorkclass());
+			break;
+
+		case 2:
+			for (Person person : people)
+				tempValues.add(person.getFnlwgt());
+
+			Collections.sort(tempValues);
+//			values = splitContinuousData(tempValues, people, a);
+			values.add((tempValues.firstElement() - 1) + "-" + tempValues.get((tempValues.size() / 2)));
+			values.add(tempValues.get((tempValues.size() / 2)) + "-" + (tempValues.lastElement() + 1));
+			break;
+
+		case 3:
+			for (Person person : people)
+				if (!values.contains(person.getEducation()) && !person.getEducation().equals("?"))
+					values.add(person.getEducation());
+			break;
+		case 4:
+			for (Person person : people)
+				tempValues.add(person.getEducationNum());
+
+			Collections.sort(tempValues);
+//			values = splitContinuousData(tempValues, people, a);
+			values.add((tempValues.firstElement() - 1) + "-" + tempValues.get((tempValues.size() / 2)));
+			values.add(tempValues.get((tempValues.size() / 2)) + "-" + (tempValues.lastElement()+1));
+			break;
+		case 5:
+			for (Person person : people)
+				if (!values.contains(person.getMaritalStatus()) && !person.getMaritalStatus().equals("?"))
+					values.add(person.getMaritalStatus());
+			break;
+		case 6:
+			for (Person person : people)
+				if (!values.contains(person.getOccupation()) && !person.getOccupation().equals("?"))
+					values.add(person.getOccupation());
+			break;
+		case 7:
+			for (Person person : people)
+				if (!values.contains(person.getRelationship()) && !person.getRelationship().equals("?"))
+					values.add(person.getRelationship());
+			break;
+		case 8:
+			for (Person person : people)
+				if (!values.contains(person.getRace()) && !person.getRace().equals("?"))
+					values.add(person.getRace());
+			break;
+		case 9:
+			for (Person person : people)
+				if (!values.contains(person.getSex()) && !person.getSex().equals("?"))
+					values.add(person.getSex());
+			break;
+		case 10:
+			for (Person person : people)
+				tempValues.add(person.getCapitalGain());
+
+			Collections.sort(tempValues);
+
+//			values.add((tempValues.firstElement()) + "-" + (tempValues.get((tempValues.size() / 2))+1));
+//			values.add((tempValues.get((tempValues.size() / 2))+1) + "-" + (tempValues.lastElement() + 1));
+			values.add("0-1");
+			values.add("1-3000");
+			values.add("3000-" + (tempValues.lastElement() + 1));
+
+			break;
+		case 11:
+			for (Person person : people)
+				tempValues.add(person.getCapitalLoss());
+
+			Collections.sort(tempValues);
+			values.add((tempValues.firstElement()) + "-" + (tempValues.get((tempValues.size() / 2))+1));
+			values.add((tempValues.get((tempValues.size() / 2))+1) + "-" + (tempValues.lastElement() + 1));
+			break;
+		case 12:
+			for (Person person : people)
+				tempValues.add(person.getHoursPerWeek());
+
+			Collections.sort(tempValues);
+			values.add(0 + "-" + tempValues.get((tempValues.size() / 2)));
+			values.add(tempValues.get((tempValues.size() / 2)) + "-" + (tempValues.lastElement() + 1));
+			break;
+		case 13:
+			for (Person person : people)
+				if (!values.contains(person.getNativeCountry()) && !person.getNativeCountry().equals("?"))
+					values.add(person.getNativeCountry());
+			break;
 		}
-		
-		if (numberOfContinuousValues != 0) {
-			continuousValue = continuousValue/numberOfContinuousValues;
-			
-			double tempContValue = 0;
-			double absValue = 0;
-			
-			for(String dataRow : data) {
-				if(Integer.parseInt(dataRow.substring(beginIndex, endIndex)) == continuousValue) {
-					values.add("<= " + continuousValue);
-					values.add("> " + continuousValue);
-					return values;
-				} else {
-					if (absValue > Math.abs(tempContValue = Integer.parseInt(dataRow.substring(beginIndex, endIndex))-continuousValue)) {
-						tempContValue = Integer.parseInt(dataRow.substring(beginIndex, endIndex));
-						absValue = Math.abs(tempContValue-continuousValue);
-					}
-				}
-			}
-					
-			values.add("<= " + tempContValue);
-			values.add("> " + tempContValue);
-			return values;
-		}
-		
+
 		return values;
 	}
-	
-	/*
-	 * TODO This method should convert the results from the test method and save them in a proper textfile where outPath decides
-	 */
-	public static void comparableData (Vector<String> results, String outPath) {
+
+	public static void comparableData(Vector<Person> people, String outPath) {
+
+		Vector<String> results = new Vector<String>();
+		int i = 0;
+
+		for (Person person : people) {
+			i++;
+			results.add(i + "," + person.toString());
+		}
+
 		try {
 			FileWriter writer = new FileWriter(outPath);
 			writer.write("Id,Target");
-			for(String result : results) {
+			writer.write(System.lineSeparator());
+			for (String result : results) {
 				writer.write(result);
+				writer.write(System.lineSeparator());
 			}
 			writer.close();
 		} catch (Exception e) {
-			System.out.println("The usual crap");
+			System.out.println("File error");
 		}
 	}
 	
-	/*
-	 * Helping(?) method for giving a boolean value when trying to parse an integer. 
-	 * This is to make it easier to program without the worry for any exceptions. 
-	 */
-	private static boolean tryParseInt(String value) {  
-	     try {  
-	         Integer.parseInt(value);  
-	         return true;  
-	      } catch (NumberFormatException e) {  
-	         return false;  
-	      }  
+//	private static double mad (Vector<Integer> values) {
+//		double median = values.get((values.size() / 2));
+//		Vector<Double> num = new Vector<Double>();
+//		for (Integer a : values){
+//			num.add(Math.abs((a-median)));
+//		}
+//		Collections.sort(num);
+//		double mad = num.get((num.size()/2));
+//		return mad;
+//	}
+
+//	private static Vector<String> splitContinuousData(Vector<Integer> values, Vector<Person> people, Attribute a) {
+//		Vector<String> tempResults = new Vector<String>();
+//		Vector<String> results = new Vector<String>();
+//		int numberOfGroups = 1;
+//		double totalGain = -9999;
+//		Vector<Vector<Integer>> split = new Vector<Vector<Integer>>();
+//		Vector<Vector<Integer>> tempSplit = new Vector<Vector<Integer>>();
+//		Vector<Integer> temp = new Vector<Integer>();
+//		Vector<Integer> tempB = new Vector<Integer>();
+//		split.add(values);
+//		boolean halfway = true;
+//
+//		while (numberOfGroups <= values.size()) {
+//
+//			for (int i=0; i < split.size(); i++) {
+//				
+//				temp.removeAllElements();
+//				tempB.removeAllElements();
+//				
+//				for(Integer number : split.get(i)) {
+//					
+//					if(!halfway) {
+//						temp.addElement(number);
+//						halfway = split.get(i).size()/2 == temp.size();
+//					} else {
+//						tempB.addElement(number);
+//					}
+//				}
+//				
+//				tempSplit.add(temp);
+//				tempSplit.add(tempB);
+//				
+//			}
+//			
+//			split = tempSplit;			
+//			tempSplit = null;
+//			
+//			for (int i=0; i < split.size(); i++)
+//				tempResults.add(split.get(i).firstElement() + "-" + split.get(i).lastElement());
+//
+//			a.setValues(tempResults);
+//
+//			if (ID3.calculateGain(people, a) < totalGain) {
+//				totalGain = ID3.calculateGain(people, a);
+//				results = tempResults;
+//			}
+//			
+//			numberOfGroups++;
+//		}
+//
+//		return results;
+//	}
+
+	private static boolean tryParseInt(String value) {
+		try {
+			Integer.parseInt(value);
+			return true;
+		} catch (NumberFormatException e) {
+			return false;
+		}
 	}
-	
-	private static boolean allPeopleOver50K (Vector<String> data) {
-		for(String dataRow : data)
-			if(dataRow.contains(">50K"))
-				return true;
-		
-		return false;
-	}
-	
-	
 }

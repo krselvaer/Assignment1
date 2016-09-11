@@ -1,7 +1,7 @@
 package no.uis.dat630;
 
 public class Person {
-	
+
 	private int age;
 	private String workclass;
 	private int fnlwgt;
@@ -18,9 +18,7 @@ public class Person {
 	private String nativeCountry;
 	private boolean over50K;
 	
-	
 	public Person () {
-		
 		age = 0;
 		workclass = null;
 		fnlwgt = 0;
@@ -36,13 +34,10 @@ public class Person {
 		hoursPerWeek = 0;
 		nativeCountry = null;
 		over50K = false;
-	
 	}
 	
-	public Person (int age, String workclass, int fnlwgt, String education, int educationNum, 
-			String maritalStatus, String occupation, String relationship, String race, String sex, int capitalGain,
-			int capitalLoss, int hoursPerWeek, String nativeCountry, boolean over50K) {
-		
+	public Person (int age, String workclass, int fnlwgt, String education, int educationNum, String maritalStatus, String occupation, String relationship,
+				   String race, String sex, int capitalGain, int capitalLoss, int hoursPerWeek, String nativeCountry, boolean over50K) {
 		this.age = age;
 		this.workclass = workclass;
 		this.fnlwgt = fnlwgt;
@@ -58,7 +53,6 @@ public class Person {
 		this.hoursPerWeek = hoursPerWeek;
 		this.nativeCountry = nativeCountry;
 		this.over50K = over50K;
-		
 	}
 
 	public int getAge() {
@@ -173,13 +167,21 @@ public class Person {
 		this.nativeCountry = nativeCountry;
 	}
 
-	public boolean over50K() {
+	public boolean isOver50K() {
 		return over50K;
 	}
 
-	public void setover50K(boolean money) {
-		this.over50K = money;
+	public void setOver50K(boolean over50k) {
+		over50K = over50k;
 	}
 	
+	@Override	
+	public String toString() {
+		if(isOver50K()) {
+			return ">50K";
+		} else {
+			return "<=50K";
+		}
+	}
 	
 }
