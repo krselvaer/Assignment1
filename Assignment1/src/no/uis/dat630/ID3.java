@@ -125,8 +125,8 @@ public class ID3 {
 		double probabilityA = over50K / (double) people.size();
 		double probabilityB = under50K / (double) people.size();
 
-		double entropy = -probabilityA * (Math.log(probabilityA) / Math.log(2))
-				- probabilityB * (Math.log(probabilityB) / Math.log(2));
+		double entropy = - probabilityA * (Math.log(probabilityA) / Math.log(2))
+						 - probabilityB * (Math.log(probabilityB) / Math.log(2));
 
 		return entropy;
 	}
@@ -139,7 +139,7 @@ public class ID3 {
 			Vector<Person> subPeople = new Vector<Person>(splitIntoSubset(people, value, a.getID()));
 
 			double temp = (double) subPeople.size() / (double) people.size();
-			gain -= (temp * entropy(subPeople));
+			gain -= temp * entropy(subPeople);
 		}
 		
 		return gain;

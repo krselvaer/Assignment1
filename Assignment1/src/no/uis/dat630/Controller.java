@@ -226,7 +226,7 @@ public class Controller {
 						}
 						break;
 					default:
-						System.out.print("couldn't complete tree");
+						System.out.print("Couldn't complete tree");
 						temp = null;
 						break;
 					}
@@ -453,7 +453,7 @@ public class Controller {
 			break;
 
 		case 1:
-//			values.add("Never-worked");
+
 			for (Person person : people)
 				if (!values.contains(person.getWorkclass()) && !person.getWorkclass().equals("?"))
 					values.add(person.getWorkclass());
@@ -464,7 +464,6 @@ public class Controller {
 				tempValues.add(person.getFnlwgt());
 
 			Collections.sort(tempValues);
-//			values = splitContinuousData(tempValues, people, a);
 			values.add((tempValues.firstElement() - 1) + "-" + tempValues.get((tempValues.size() / 2)));
 			values.add(tempValues.get((tempValues.size() / 2)) + "-" + (tempValues.lastElement() + 1));
 			break;
@@ -479,7 +478,6 @@ public class Controller {
 				tempValues.add(person.getEducationNum());
 
 			Collections.sort(tempValues);
-//			values = splitContinuousData(tempValues, people, a);
 			values.add((tempValues.firstElement() - 1) + "-" + tempValues.get((tempValues.size() / 2)));
 			values.add(tempValues.get((tempValues.size() / 2)) + "-" + (tempValues.lastElement()+1));
 			break;
@@ -513,9 +511,6 @@ public class Controller {
 				tempValues.add(person.getCapitalGain());
 
 			Collections.sort(tempValues);
-
-//			values.add((tempValues.firstElement()) + "-" + (tempValues.get((tempValues.size() / 2))+1));
-//			values.add((tempValues.get((tempValues.size() / 2))+1) + "-" + (tempValues.lastElement() + 1));
 			values.add("0-1");
 			values.add("1-3000");
 			values.add("3000-" + (tempValues.lastElement() + 1));
@@ -571,70 +566,6 @@ public class Controller {
 		}
 	}
 	
-//	private static double mad (Vector<Integer> values) {
-//		double median = values.get((values.size() / 2));
-//		Vector<Double> num = new Vector<Double>();
-//		for (Integer a : values){
-//			num.add(Math.abs((a-median)));
-//		}
-//		Collections.sort(num);
-//		double mad = num.get((num.size()/2));
-//		return mad;
-//	}
-
-//	private static Vector<String> splitContinuousData(Vector<Integer> values, Vector<Person> people, Attribute a) {
-//		Vector<String> tempResults = new Vector<String>();
-//		Vector<String> results = new Vector<String>();
-//		int numberOfGroups = 1;
-//		double totalGain = -9999;
-//		Vector<Vector<Integer>> split = new Vector<Vector<Integer>>();
-//		Vector<Vector<Integer>> tempSplit = new Vector<Vector<Integer>>();
-//		Vector<Integer> temp = new Vector<Integer>();
-//		Vector<Integer> tempB = new Vector<Integer>();
-//		split.add(values);
-//		boolean halfway = true;
-//
-//		while (numberOfGroups <= values.size()) {
-//
-//			for (int i=0; i < split.size(); i++) {
-//				
-//				temp.removeAllElements();
-//				tempB.removeAllElements();
-//				
-//				for(Integer number : split.get(i)) {
-//					
-//					if(!halfway) {
-//						temp.addElement(number);
-//						halfway = split.get(i).size()/2 == temp.size();
-//					} else {
-//						tempB.addElement(number);
-//					}
-//				}
-//				
-//				tempSplit.add(temp);
-//				tempSplit.add(tempB);
-//				
-//			}
-//			
-//			split = tempSplit;			
-//			tempSplit = null;
-//			
-//			for (int i=0; i < split.size(); i++)
-//				tempResults.add(split.get(i).firstElement() + "-" + split.get(i).lastElement());
-//
-//			a.setValues(tempResults);
-//
-//			if (ID3.calculateGain(people, a) < totalGain) {
-//				totalGain = ID3.calculateGain(people, a);
-//				results = tempResults;
-//			}
-//			
-//			numberOfGroups++;
-//		}
-//
-//		return results;
-//	}
-
 	private static boolean tryParseInt(String value) {
 		try {
 			Integer.parseInt(value);
