@@ -10,20 +10,23 @@ public class ID3 {
 
 		DTreeNode root = new DTreeNode();
 
-		if (attributes.isEmpty() || people.size() < 20) {
+		if (attributes.isEmpty()) {
 			System.out.print("Attributes empty - ");
 			int countA = 0;
 			int countB = 0;
-			for(Person person : people)
-				if(person.isOver50K())
+			for (Person person : people) {
+				if (person.isOver50K()) {
 					countA++;
-				countB++;
-			if(countA > countB) {
-				root.setLabel("-");
-			} else {
-				root.setLabel("+");
+				} else {
+					countB++;
+				}
 			}
 			
+			if (countA >= countB) {
+				root.setLabel("+");
+			} else {
+				root.setLabel("-");
+			}
 			return root;
 
 		} else if (allPeopleOver50K(people)) {
@@ -38,45 +41,43 @@ public class ID3 {
 
 		} else {
 
-//			double iGain = 0;
 			Attribute startingAttribute = attHighestGain(people, attributes);
-//
-//			for (Attribute a : attributes) {
-//				if (calculateGain(people, a) >= iGain) {
-//					iGain = calculateGain(people, a);
-//					startingAttribute = a;
-//				}
-//			}
 
 			root.setAttribute(startingAttribute);
 			root.setLabel(startingAttribute.getLabel());
 
 			for (String value : startingAttribute.getValues()) {
-				
+
 				root.addEdgeValues(value);
 
-				Vector<Person> subPeople =  new Vector<Person>(splitIntoSubset(people, value, startingAttribute.getID()));
+				Vector<Person> subPeople = new Vector<Person>(
+						splitIntoSubset(people, value, startingAttribute.getID()));
 
 				if (subPeople.size() <= 20) {
-					
+
 					DTreeNode leafNode = new DTreeNode();
 					leafNode.setParent(root);
 					root.addChild(leafNode);
 					System.out.print("Most common - ");
+					
 					int count = 0;
 					int countB = 0;
-					for(Person person : subPeople)
-						if(person.isOver50K())
+					
+					for (Person person : subPeople) {
+						if (person.isOver50K()) {
 							count++;
-						countB++;
-					if(count > countB) {
+						} else {
+							countB++;
+						}
+					}
+					if (count >= countB) {
 						leafNode.setLabel("+");
 					} else {
 						leafNode.setLabel("-");
 					}
 
 				} else {
-					
+
 					attributes.remove(startingAttribute);
 					DTreeNode subTree = createTree(subPeople, attributes);
 					subTree.setParent(root);
@@ -87,23 +88,23 @@ public class ID3 {
 
 		return root;
 	}
-	
-	private static Attribute attHighestGain (Vector<Person> people, List<Attribute> attributes) {
+
+	private static Attribute attHighestGain(Vector<Person> people, List<Attribute> attributes) {
 		double gain = -1;
 		Attribute temp = null;
-		for(Attribute a : attributes) {
-			if(calculateGain(people, a) > gain) {
+		for (Attribute a : attributes) {
+			if (calculateGain(people, a) > gain) {
 				gain = calculateGain(people, a);
 				temp = a;
 				System.out.print(a.getLabel() + " Gain: " + gain + "  |   ");
 			}
 		}
-		
+
 		return temp;
 	}
-	
+
 	/*
-	 *    Entropy = - p(a)*log(p(a)) - p(b)*log(p(b))
+	 * Entropy = - p(a)*log(p(a)) - p(b)*log(p(b))
 	 */
 	public static double entropy(Vector<Person> people) {
 		double under50K = 0;
@@ -112,36 +113,35 @@ public class ID3 {
 		for (Person person : people) {
 			if (person.isOver50K()) {
 				over50K++;
-			}	
-			under50K++;
+			} else {
+				under50K++;
+			}
 		}
 
 		if (under50K == 0 || over50K == 0) {
 			return 0;
 		}
-		
-		double probabilityA = over50K / (double)people.size();
-		double probabilityB = under50K / (double)people.size();
 
-		double entropy = - probabilityA * (Math.log(probabilityA) / Math.log(2))
-						 - probabilityB * (Math.log(probabilityB) / Math.log(2));
-		
+		double probabilityA = over50K / (double) people.size();
+		double probabilityB = under50K / (double) people.size();
+
+		double entropy = -probabilityA * (Math.log(probabilityA) / Math.log(2))
+				- probabilityB * (Math.log(probabilityB) / Math.log(2));
+
 		return entropy;
 	}
 
 	public static double calculateGain(Vector<Person> people, Attribute a) {
 		double gain = entropy(people);
-		double gainB = 0;
 
 		for (String value : a.getValues()) {
 
 			Vector<Person> subPeople = new Vector<Person>(splitIntoSubset(people, value, a.getID()));
-			
-			double temp = (double) subPeople.size() / (double) people.size();
-			gainB += (temp * entropy(subPeople));
-		}
-		gain = gain - gainB;
 
+			double temp = (double) subPeople.size() / (double) people.size();
+			gain -= (temp * entropy(subPeople));
+		}
+		
 		return gain;
 	}
 
@@ -251,20 +251,20 @@ public class ID3 {
 
 		return true;
 	}
-	
-	public static void printTree (DTreeNode tree) {
+
+	public static void printTree(DTreeNode tree) {
 		String parentLbl = "No one";
-		
-		if(tree.getParent() != null) {
+
+		if (tree.getParent() != null) {
 			parentLbl = tree.getParent().getLabel();
 		}
-		
+
 		System.out.println("Node: " + tree.getLabel() + " Parent: " + parentLbl);
 		System.out.print("edges");
-		for(String sdf : tree.getEdgeValues())
+		for (String sdf : tree.getEdgeValues())
 			System.out.print(" " + sdf + ",");
 		System.out.println("");
-		for(DTreeNode child : tree.getChildren())
-			printTree (child);
+		for (DTreeNode child : tree.getChildren())
+			printTree(child);
 	}
 }
